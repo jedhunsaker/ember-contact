@@ -15,149 +15,134 @@
 <script src="/js/vendor/ember-1.0.0-rc.3.min.js"></script>
 <script src="/js/app.js"></script>
 
-<script type="text/x-handlebars" data-template-name="application">
+<script id="application" type="text/x-handlebars">
   <div id="wrapper">
 
     <header>
       <div id="logo">
-        <a href="#">
+        {{#linkTo "add"}}
           <img src="/img/logo.png" alt="Contact Path">
-        </a>
+        {{/linkTo}}
       </div>
     </header>
     <div id="smartSearch">
-      <input type="search" id="searchBox" placeholder="Who?">
-      {{!-- if search results exist
+      {{view Ember.TextField valueBinding="searchCriteria" type="search" id="searchBox" placeholder="Who?"}}
+      {{#if shouldShowSearchResults}}
         <ul id="searchResults">
-          {{!-- repeat for each contact
+          {{#each contact in searchResults}}
             <li>
-              <a href="#">
-                {{!-- the name of the contact }}
-              </a>
+              {{#linkTo "view" contact}}
+                {{ contact.name }}
+              {{/linkTo}}
             </li>
-          }}
+          {{/each}}
         </ul>
-      --}}
-      {{!-- if no search results exist
-        <p>
-          A contact named <strong>{{!-- the search criteria }}</strong> is not found.
-        </p>
-      --}}
+      {{else}}
+        {{#if shouldShowNotFound}}
+          <p>
+            A contact named <strong>{{ searchCriteria }}</strong> is not found.
+          </p>
+        {{/if}}
+      {{/if}}
       <div class="clearfix"></div>
     </div>
     <hr/>
 
     <div id="contactsList" class="listContainer">
-      {{!-- repeat for each list of contacts
+      {{#each model.grouped}}
         <dl>
-          <dt>{{!-- the name of the list }}</dt>
-          {{!-- repeat for each contact in the list
+          <dt>{{ name }}</dt>
+          {{#each contact in contacts}}
             <dd>
-              <a href="#" class="cnt">
-                {{!-- the name of the contact }}
-              </a>
+              {{#linkTo "view" contact classNames="cnt"}}
+                {{ contact.name }}
+              {{/linkTo}}
             </dd>
-          }}
+          {{/each}}
         </dl>
-      --}}
+      {{/each}}
     </div>
     <div id="rightViewContainer">
-      {{!-- put the add/edit/view template here --}}
+      {{ outlet }}
     </div>
   </div>
 </script>
 
-<script type="text/x-handlebars" data-template-name="add">
+<script id="_contactFields" type="text/x-handlebars">
+  <div>
+    {{view Ember.TextField valueBinding="model.name" placeholder="Name"}}
+    {{#unless isNameValid}}
+      <span>
+        What good it will do without entering your contact`s name?
+      </span>
+    {{/unless}}
+  </div>
+  <div>
+    {{view Ember.TextField valueBinding="model.phone" type="tel" placeholder="Phone"}}
+    {{#unless isPhoneValid}}
+      <span>
+        It is supposed to be a number. Right?
+      </span>
+    {{/unless}}
+  </div>
+  <div>
+    {{view Ember.TextField valueBinding="model.email" type="email" placeholder="Email"}}
+    {{#unless isEmailValid}}
+      <span>
+        From when they started to accept invalid emails?
+      </span>
+    {{/unless}}
+  </div>
+</script>
+
+<script id="add" type="text/x-handlebars">
   <form name="myForm" class="formdesign">
-    <div>
-      <input type="text" placeholder="Name">
-      {{!-- displayed when the value is invalid
-        <span>
-          What good it will do without entering your contact`s name?
-        </span>
-      --}}
-    </div>
-    <div>
-      <input type="text" placeholder="Phone">
-      {{!-- displayed when the value is invalid
-        <span>
-          It is supposed to be a number. Right?
-        </span>
-      --}}
-    </div>
-    <div>
-      <input type="text" placeholder="Email">
-      {{!-- displayed when the value is invalid
-        <span>
-          From when they started to accept invalid emails?
-        </span>
-      --}}
-    </div>
-    <button {{!-- disable this button when any field is invalid --}}>
+    {{partial "contactFields"}}
+    <button {{action "addContact" model}} {{bindAttr disabled="isFormInvalid"}}>
       Save
     </button>
   </form>
 </script>
 
-<script type="text/x-handlebars" data-template-name="view">
-  <div class="col1">
-    <h2>
-      {{!-- the name of the contact --}}
-    </h2>
-    <img src="/img/profile_image.png" alt="">
-  </div>
-  <div class="col2">
-    <p class="email">
-      {{!-- the email of the contact --}}
-    </p>
-    <p class="phone">
-      {{!-- the phone of the contact --}}
-    </p>
-  </div>
-  <hr/>
-  <hr/>
-  <a class="btn btn-left back">
-    Go Back
-  </a>
-  <a class="btn">
+<script id="view" type="text/x-handlebars">
+  {{#with content}}
+    <div class="col1">
+      <h2>
+        {{ name }}
+      </h2>
+      <img src="/img/profile_image.png" alt="">
+    </div>
+    <div class="col2">
+      <p class="email">
+        {{ email }}
+      </p>
+      <p class="phone">
+        {{ phone }}
+      </p>
+    </div>
+    <hr/>
+    <hr/>
+    <a class="btn btn-left back" {{action "goBack"}}>
+      Go Back
+    </a>
+  {{/with}}
+  {{#linkTo "edit" content classNames="btn"}}
     Edit
-  </a>
+  {{/linkTo}}
 </script>
 
-<script type="text/x-handlebars" data-template-name="edit">
+<script id="edit" type="text/x-handlebars">
   <form name="myForm" class="formdesign">
-    <div>
-      <input type="text" placeholder="Name">
-      {{!-- displayed when the value is invalid
-        <span>
-          What good it will do without entering your contact`s name?
-        </span>
-      --}}
-    </div>
-    <div>
-      <input type="text" placeholder="Phone">
-      {{!-- displayed when the value is invalid
-        <span>
-          It is supposed to be a number. Right?
-        </span>
-      --}}
-    </div>
-    <div>
-      <input type="text" placeholder="Email">
-      {{!-- displayed when the value is invalid
-        <span>
-          From when they started to accept invalid emails?
-        </span>
-      --}}
-    </div>
-    <button class="btn btn-left" {{!-- disabled when any field is invalid --}}>
+    {{partial "contactFields"}}
+    <button {{action "editContact" model}} {{bindAttr disabled="isFormInvalid"}} class="btn btn-left">
       Done
     </button>
-    <button class="btn btn-danger">
+    <button {{action "deleteContact" model}} class="btn btn-danger">
       Delete
     </button>
     </div>
   </form>
 </script>
+
 </body>
 </html>
